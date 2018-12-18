@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func main(){
+func main() {
 	fmt.Println("Hello I'm a client")
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
@@ -31,7 +31,7 @@ func doUnary(c greetpb.GreetServiceClient) {
 	req := &greetpb.GreetRequest{
 		Greeting: &greetpb.Greeting{
 			FirstName: "Stephane",
-			LastName: "Maarek",
+			LastName:  "Maarek",
 		},
 	}
 
@@ -48,7 +48,7 @@ func doServerStreaming(c greetpb.GreetServiceClient) {
 	req := &greetpb.GreetManyTimesRequest{
 		Greeting: &greetpb.Greeting{
 			FirstName: "Stephane",
-			LastName: "Maarek",
+			LastName:  "Maarek",
 		},
 	}
 
