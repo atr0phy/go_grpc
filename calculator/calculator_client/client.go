@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func main(){
+func main() {
 	fmt.Println("Calculator Client")
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
@@ -21,13 +21,15 @@ func main(){
 
 	//doUnary(c)
 
-	doServerStreaming(c)
+	//doServerStreaming(c)
+
+	doClientStreaming(c)
 }
 
 func doUnary(c calculatorpb.CalculatorServiceClient) {
 	fmt.Println("Starting to do a Sum Unary RPC...")
 	req := &calculatorpb.SumRequest{
-		FirstNumber: 5,
+		FirstNumber:  5,
 		SecondNumber: 40,
 	}
 
@@ -57,4 +59,29 @@ func doServerStreaming(c calculatorpb.CalculatorServiceClient) {
 		}
 		fmt.Println(res.GetPrimeFactor())
 	}
+}
+
+func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
+	fmt.Println("Starting to do a ComputeAverage Client Streaming RPC ...")
+
+	stream, err := c.ComputeAverage(context.Background())
+	if err != nil {
+		log.Fatalf("error while opening stream: %v", err)
+	}
+
+	numbers := []int32{3, 5, 9, 54, 23}
+
+	for _, number := range numbers {
+		fmt.Printf("Sending number: %v\n", number)
+		stream.Send(&calculatorpb.ComputeAverageRequest{
+			Number: number,
+		})
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving response: %v", err)
+	}
+
+	fmt.Printf("The Average is: %v\n", res.Average)
 }

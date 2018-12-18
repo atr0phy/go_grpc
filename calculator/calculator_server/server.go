@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/atrophyworks/go_grpc/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
 )
 
-type server struct {}
+type server struct{}
 
 func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	fmt.Printf("Received Sum RPC: %v\n", req)
@@ -29,7 +30,7 @@ func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositi
 	divisor := int64(2)
 
 	for number > 1 {
-		if number % divisor == 0 {
+		if number%divisor == 0 {
 			stream.Send(&calculatorpb.PrimeNumberDecompositionResponse{
 				PrimeFactor: divisor,
 			})
@@ -42,7 +43,29 @@ func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositi
 	return nil
 }
 
-func main(){
+func (*server) ComputeAverage(stream calculatorpb.CalculatorService_ComputeAverageServer) error {
+	fmt.Printf("Received ComputeAverage RPC\n")
+
+	sum := int32(0)
+	count := 0
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			average := float64(sum) / float64(count)
+			return stream.SendAndClose(&calculatorpb.ComputeAverageResponse{
+				Average: average,
+			})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+		sum += req.GetNumber()
+		count++
+	}
+}
+
+func main() {
 	fmt.Println("Calculator Server")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
